@@ -14,10 +14,19 @@ int altura(tnode *arv) {
     }
 }
 
+void insere_lista(listnode **lista, titem item) {
+    listnode *novo = (listnode *) malloc(sizeof(listnode));
+    novo->item = item;
+    novo->next = *lista;
+    *lista = novo;
+}
+
 void avl_insere(tnode **parv, titem item) {
     if (*parv == NULL) {
         *parv = (tnode *) malloc(sizeof(tnode));
         (*parv)->item = item;
+        (*parv)->lista = NULL;
+        insere_lista(&(*parv)->lista, item);
         (*parv)->esq = NULL;
         (*parv)->dir = NULL;
         (*parv)->pai = NULL;
@@ -27,11 +36,13 @@ void avl_insere(tnode **parv, titem item) {
         if ((*parv)->esq != NULL) {
             (*parv)->esq->pai = *parv;
         }
-    } else {
+    } else if (item > (*parv)->item) {
         avl_insere(&(*parv)->dir, item);
         if ((*parv)->dir != NULL) {
             (*parv)->dir->pai = *parv;
         }
+    } else {
+        insere_lista(&(*parv)->lista, item);
     }
     (*parv)->h = max(altura((*parv)->esq), altura((*parv)->dir)) + 1;
     _avl_rebalancear(parv);
@@ -114,23 +125,26 @@ void avl_remove(tnode **parv, titem reg) {
         } else if (cmp < 0) {
             avl_remove(&((*parv)->dir), reg);
         } else {
-            if ((*parv)->esq == NULL && (*parv)->dir == NULL) {
-                free(*parv);
-                *parv = NULL;
-            } else if ((*parv)->esq == NULL || (*parv)->dir == NULL) {
-                tnode *aux = *parv;
-                if ((*parv)->esq == NULL) {
-                    *parv = (*parv)->dir;
-                    (*parv)->pai = aux->pai;
+            remove_lista(&(*parv)->lista, reg);
+            if ((*parv)->lista == NULL) {
+                if ((*parv)->esq == NULL && (*parv)->dir == NULL) {
+                    free(*parv);
+                    *parv = NULL;
+                } else if ((*parv)->esq == NULL || (*parv)->dir == NULL) {
+                    tnode *aux = *parv;
+                    if ((*parv)->esq == NULL) {
+                        *parv = (*parv)->dir;
+                        (*parv)->pai = aux->pai;
+                    } else {
+                        *parv = (*parv)->esq;
+                        (*parv)->pai = aux->pai;
+                    }
+                    free(aux);
                 } else {
-                    *parv = (*parv)->esq;
-                    (*parv)->pai = aux->pai;
+                    tnode **sucessor = percorre_esq(&(*parv)->dir);
+                    (*parv)->item = (*sucessor)->item;
+                    avl_remove(&(*parv)->dir, (*sucessor)->item);
                 }
-                free(aux);
-            } else {
-                tnode **sucessor = percorre_esq(&(*parv)->dir);
-                (*parv)->item = (*sucessor)->item;
-                avl_remove(&(*parv)->dir, (*sucessor)->item);
             }
         }
         if (*parv != NULL) {
@@ -144,6 +158,12 @@ void avl_destroi(tnode *parv) {
     if (parv != NULL) {
         avl_destroi(parv->esq);
         avl_destroi(parv->dir);
+        listnode *current = parv->lista;
+        while (current != NULL) {
+            listnode *temp = current;
+            current = current->next;
+            free(temp);
+        }
         free(parv);
     }
 }
