@@ -21,6 +21,23 @@ void insere_lista(listnode **lista, titem item) {
     *lista = novo;
 }
 
+void remove_lista(listnode **lista, titem item) {
+    listnode *aux = *lista;
+    listnode *anterior = NULL;
+    while (aux != NULL && aux->item != item) {
+        anterior = aux;
+        aux = aux->next;
+    }
+    if (aux != NULL) {
+        if (anterior == NULL) {
+            *lista = aux->next;
+        } else {
+            anterior->next = aux->next;
+        }
+        free(aux);
+    }
+}
+
 void avl_insere(tnode **parv, titem item) {
     if (*parv == NULL) {
         *parv = (tnode *) malloc(sizeof(tnode));
