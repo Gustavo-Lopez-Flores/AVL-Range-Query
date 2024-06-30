@@ -184,3 +184,22 @@ void avl_destroi(tnode *parv) {
         free(parv);
     }
 }
+
+tnode* minimo(tnode* no) {
+    while (no->esq != NULL) {
+        no = no->esq;
+    }
+    return no;
+}
+
+tnode* avl_sucessor(tnode *no) {
+    if (no->dir != NULL) {
+        return minimo(no->dir);
+    }
+    tnode *pai = no->pai;
+    while (pai != NULL && no == pai->dir) {
+        no = pai;
+        pai = pai->pai;
+    }
+    return pai;
+}
