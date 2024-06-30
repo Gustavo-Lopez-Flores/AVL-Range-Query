@@ -3,8 +3,14 @@
 
 typedef int titem;
 
+typedef struct _listnode {
+    titem item;
+    struct _listnode *next;
+} listnode;
+
 typedef struct _node {
     titem item;
+    struct _listnode *lista;
     struct _node *esq;
     struct _node *dir;
     struct _node *pai;
