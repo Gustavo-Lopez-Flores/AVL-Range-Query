@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../include/avl.h"
+#include "../include/compare.h"
 
 int max(int a, int b) {
     return a > b ? a : b;
@@ -15,52 +16,34 @@ int altura(tnode *arv) {
     }
 }
 
-void insere_lista(listnode **lista, titem item) {
-    listnode *novo = (listnode *) malloc(sizeof(listnode));
-    novo->item = item;
-    novo->next = *lista;
-    *lista = novo;
-}
-
-void remove_lista(listnode **lista, titem item, int (*cmp)(titem, titem)) {
-    listnode *aux = *lista;
-    listnode *anterior = NULL;
-    while (aux != NULL && cmp(aux->item, item) != 0) {
-        anterior = aux;
-        aux = aux->next;
-    }
-    if (aux != NULL) {
-        if (anterior == NULL) {
-            *lista = aux->next;
-        } else {
-            anterior->next = aux->next;
-        }
-        free(aux);
-    }
-}
-
 void avl_insere(tnode **parv, titem item, int (*cmp)(titem, titem)) {
     if (*parv == NULL) {
         *parv = (tnode *) malloc(sizeof(tnode));
         (*parv)->item = item;
-        (*parv)->lista = NULL;
-        insere_lista(&(*parv)->lista, item);
         (*parv)->esq = NULL;
         (*parv)->dir = NULL;
         (*parv)->pai = NULL;
         (*parv)->h = 0;
+
+        listnode *new_node = (listnode *) malloc(sizeof(listnode));
+        new_node->item = item;
+        new_node->next = NULL;
+        (*parv)->lista = new_node;
+    } else if (cmp(item, (*parv)->item) == 0) {
+        listnode *new_node = (listnode *) malloc(sizeof(listnode));
+        new_node->item = item;
+        new_node->next = (*parv)->lista;
+        (*parv)->lista = new_node;
     } else if (cmp(item, (*parv)->item) < 0) {
         avl_insere(&(*parv)->esq, item, cmp);
         if ((*parv)->esq != NULL) {
             (*parv)->esq->pai = *parv;
         }
-    } else if (cmp(item, (*parv)->item) > 0) {
+    } else {
         avl_insere(&(*parv)->dir, item, cmp);
         if ((*parv)->dir != NULL) {
             (*parv)->dir->pai = *parv;
         }
-    } else {
-        insere_lista(&(*parv)->lista, item);
     }
     (*parv)->h = max(altura((*parv)->esq), altura((*parv)->dir)) + 1;
     _avl_rebalancear(parv);
@@ -137,32 +120,44 @@ tnode **percorre_esq(tnode **arv) {
 
 void avl_remove(tnode **parv, titem reg, int (*cmp)(titem, titem)) {
     if (*parv != NULL) {
-        int cmp_result = cmp((*parv)->item, reg);
-        if (cmp_result > 0) {
+        int comp = cmp(reg, (*parv)->item);
+        if (comp < 0) {
             avl_remove(&((*parv)->esq), reg, cmp);
-        } else if (cmp_result < 0) {
+        } else if (comp > 0) {
             avl_remove(&((*parv)->dir), reg, cmp);
         } else {
-            remove_lista(&(*parv)->lista, reg, cmp);
-            if ((*parv)->lista == NULL) {
-                if ((*parv)->esq == NULL && (*parv)->dir == NULL) {
-                    free(*parv);
-                    *parv = NULL;
-                } else if ((*parv)->esq == NULL || (*parv)->dir == NULL) {
-                    tnode *aux = *parv;
-                    if ((*parv)->esq == NULL) {
-                        *parv = (*parv)->dir;
-                        (*parv)->pai = aux->pai;
-                    } else {
-                        *parv = (*parv)->esq;
-                        (*parv)->pai = aux->pai;
-                    }
-                    free(aux);
-                } else {
-                    tnode **sucessor = percorre_esq(&(*parv)->dir);
-                    (*parv)->item = (*sucessor)->item;
-                    avl_remove(&(*parv)->dir, (*sucessor)->item, cmp);
+            if ((*parv)->esq == NULL && (*parv)->dir == NULL) {
+                listnode *curr = (*parv)->lista;
+                while (curr != NULL) {
+                    listnode *tmp = curr;
+                    curr = curr->next;
+                    free(tmp);
                 }
+                free(*parv);
+                *parv = NULL;
+            } else if ((*parv)->esq == NULL || (*parv)->dir == NULL) {
+                tnode *aux = *parv;
+                if ((*parv)->esq == NULL) {
+                    *parv = (*parv)->dir;
+                    (*parv)->pai = aux->pai;
+                } else {
+                    *parv = (*parv)->esq;
+                    (*parv)->pai = aux->pai;
+                }
+                listnode *curr = aux->lista;
+                while (curr != NULL) {
+                    listnode *tmp = curr;
+                    curr = curr->next;
+                    free(tmp);
+                }
+                free(aux);
+            } else {
+                tnode **sucessor = percorre_esq(&(*parv)->dir);
+                (*parv)->item = (*sucessor)->item;
+                listnode *old_lista = (*parv)->lista;
+                (*parv)->lista = (*sucessor)->lista;
+                (*sucessor)->lista = old_lista;
+                avl_remove(&(*parv)->dir, (*sucessor)->item, cmp);
             }
         }
         if (*parv != NULL) {
@@ -176,31 +171,93 @@ void avl_destroi(tnode *parv) {
     if (parv != NULL) {
         avl_destroi(parv->esq);
         avl_destroi(parv->dir);
-        listnode *current = parv->lista;
-        while (current != NULL) {
-            listnode *temp = current;
-            current = current->next;
-            free(temp);
+        listnode *curr = parv->lista;
+        while (curr != NULL) {
+            listnode *tmp = curr;
+            curr = curr->next;
+            free(tmp);
         }
         free(parv);
     }
 }
 
-tnode* minimo(tnode* no) {
-    while (no->esq != NULL) {
-        no = no->esq;
-    }
-    return no;
-}
-
 tnode* avl_sucessor(tnode *no) {
     if (no->dir != NULL) {
-        return minimo(no->dir);
+        no = no->dir;
+        while (no->esq != NULL) {
+            no = no->esq;
+        }
+        return no;
     }
+
     tnode *pai = no->pai;
     while (pai != NULL && no == pai->dir) {
         no = pai;
         pai = pai->pai;
     }
     return pai;
+}
+
+void consulta_latitude_maior_que(tnode *parv, double valor, int *resultado, int *tamanho) {
+    if (parv != NULL) {
+        if (parv->item.latitude > valor) {
+            listnode *curr = parv->lista;
+            while (curr != NULL) {
+                resultado[(*tamanho)++] = curr->item.codigo_ibge;
+                curr = curr->next;
+            }
+            consulta_latitude_maior_que(parv->esq, valor, resultado, tamanho);
+        }
+        consulta_latitude_maior_que(parv->dir, valor, resultado, tamanho);
+    }
+}
+
+void consulta_longitude_intervalo(tnode *parv, double min, double max, int *resultado, int *tamanho) {
+    if (parv != NULL) {
+        if (parv->item.longitude > min) {
+            consulta_longitude_intervalo(parv->esq, min, max, resultado, tamanho);
+        }
+        if (parv->item.longitude >= min && parv->item.longitude <= max) {
+            listnode *curr = parv->lista;
+            while (curr != NULL) {
+                resultado[(*tamanho)++] = curr->item.codigo_ibge;
+                curr = curr->next;
+            }
+        }
+        if (parv->item.longitude < max) {
+            consulta_longitude_intervalo(parv->dir, min, max, resultado, tamanho);
+        }
+    }
+}
+
+void consulta_ddd_igual(tnode *parv, int valor, int *resultado, int *tamanho) {
+    if (parv != NULL) {
+        consulta_ddd_igual(parv->esq, valor, resultado, tamanho);
+        if (parv->item.ddd == valor) {
+            listnode *curr = parv->lista;
+            while (curr != NULL) {
+                resultado[(*tamanho)++] = curr->item.codigo_ibge;
+                curr = curr->next;
+            }
+        }
+        consulta_ddd_igual(parv->dir, valor, resultado, tamanho);
+    }
+}
+
+int* intersecao(int *a, int tamanho_a, int *b, int tamanho_b, int *tamanho_intersecao) {
+    int *resultado = (int *) malloc(sizeof(int) * (tamanho_a < tamanho_b ? tamanho_a : tamanho_b));
+    int i = 0, j = 0, k = 0;
+    while (i < tamanho_a && j < tamanho_b) {
+        if (a[i] < b[j]) {
+            i++;
+        } else if (a[i] > b[j]) {
+            j++;
+        } else {
+            resultado[k++] = a[i];
+            i++;
+            j++;
+        }
+    }
+    *tamanho_intersecao = k;
+    return resultado;
 }
