@@ -106,7 +106,7 @@ int main(void) {
 
     consulta_latitude_maior_que(avl_latitude, 50.0, resultado_latitude, &tamanho_latitude);
     consulta_longitude_intervalo(avl_longitude, 20.0, 30.0, resultado_longitude, &tamanho_longitude);
-    consulta_ddd_igual_a(avl_ddd, 67, resultado_ddd, &tamanho_ddd);
+    consulta_ddd_igual(avl_ddd, 67, resultado_ddd, &tamanho_ddd);
 
     int resultado_interseccao[1000], tamanho_interseccao = 0;
     for (int i = 0; i < tamanho_latitude; i++) {

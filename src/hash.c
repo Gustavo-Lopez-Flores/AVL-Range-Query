@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "hash.h"
+#include "../include/hash.h"
 
 #define SEED 0x12345678
 
