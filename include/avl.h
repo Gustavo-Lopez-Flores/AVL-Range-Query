@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "avl.h"
-#include "compare.h"
-#include "cJSON.h"
+#include "../include/avl.h"
+#include "../include/compare.h"
+#include "../include/cJSON/cJSON.h"
 
 void load_json_file(const char *filename, cJSON **json) {
     FILE *file = fopen(filename, "r");
