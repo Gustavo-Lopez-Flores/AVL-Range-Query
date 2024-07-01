@@ -1,7 +1,17 @@
 #ifndef __AVL__
 #define __AVL__
 
-typedef int titem;
+typedef struct {
+    int codigo_ibge;
+    char *nome;
+    double latitude;
+    double longitude;
+    int capital;
+    int codigo_uf;
+    int siafi_id;
+    int ddd;
+    char *fuso_horario;
+} titem;
 
 typedef struct _listnode {
     titem item;
@@ -17,8 +27,8 @@ typedef struct _node {
     int h;
 } tnode;
 
-void avl_insere(tnode **parv, titem reg);
-void avl_remove(tnode **parv, titem reg);
+void avl_insere(tnode **parv, titem reg, int (*cmp)(titem, titem));
+void avl_remove(tnode **parv, titem reg, int (*cmp)(titem, titem));
 void avl_destroi(tnode *parv);
 tnode* avl_sucessor(tnode *no);
 
