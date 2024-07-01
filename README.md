@@ -37,6 +37,12 @@ Cada query irá retornar um conjunto de códigos IBGE. A combinação consiste e
 ### Descrição
 Desenvolva uma interface para permitir a realização de range queries e combinações de range queries em qualquer um dos cinco campos definidos na Tarefa 2. A busca deve retornar todos os campos das cidades fornecidas na base de dados. Para a busca das cidades pelo código IBGE, utilize uma tabela hash.
 
+## Observações
+
+   - Execute na raiz do projeto para compilar, depois execute `./saida`
+
+         gcc -I./cJSON -I./include src/avl.c src/compare.c src/main.c cJSON/cJSON.c -o saida
+
 ---
 
 **Nota:** Este projeto foi desenvolvido como parte de um trabalho acadêmico na disciplina de Estrutura de Dados. As funcionalidades foram implementadas com base em conceitos de estruturas de dados e algoritmos estudados em sala de aula.
