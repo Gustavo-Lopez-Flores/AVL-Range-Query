@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../include/avl.h"
 
 int max(int a, int b) {
@@ -21,10 +22,10 @@ void insere_lista(listnode **lista, titem item) {
     *lista = novo;
 }
 
-void remove_lista(listnode **lista, titem item) {
+void remove_lista(listnode **lista, titem item, int (*cmp)(titem, titem)) {
     listnode *aux = *lista;
     listnode *anterior = NULL;
-    while (aux != NULL && aux->item != item) {
+    while (aux != NULL && cmp(aux->item, item) != 0) {
         anterior = aux;
         aux = aux->next;
     }
@@ -38,7 +39,7 @@ void remove_lista(listnode **lista, titem item) {
     }
 }
 
-void avl_insere(tnode **parv, titem item) {
+void avl_insere(tnode **parv, titem item, int (*cmp)(titem, titem)) {
     if (*parv == NULL) {
         *parv = (tnode *) malloc(sizeof(tnode));
         (*parv)->item = item;
@@ -48,13 +49,13 @@ void avl_insere(tnode **parv, titem item) {
         (*parv)->dir = NULL;
         (*parv)->pai = NULL;
         (*parv)->h = 0;
-    } else if (item < (*parv)->item) {
-        avl_insere(&(*parv)->esq, item);
+    } else if (cmp(item, (*parv)->item) < 0) {
+        avl_insere(&(*parv)->esq, item, cmp);
         if ((*parv)->esq != NULL) {
             (*parv)->esq->pai = *parv;
         }
-    } else if (item > (*parv)->item) {
-        avl_insere(&(*parv)->dir, item);
+    } else if (cmp(item, (*parv)->item) > 0) {
+        avl_insere(&(*parv)->dir, item, cmp);
         if ((*parv)->dir != NULL) {
             (*parv)->dir->pai = *parv;
         }
@@ -134,15 +135,15 @@ tnode **percorre_esq(tnode **arv) {
     }
 }
 
-void avl_remove(tnode **parv, titem reg) {
+void avl_remove(tnode **parv, titem reg, int (*cmp)(titem, titem)) {
     if (*parv != NULL) {
-        int cmp = (*parv)->item - reg;
-        if (cmp > 0) {
-            avl_remove(&((*parv)->esq), reg);
-        } else if (cmp < 0) {
-            avl_remove(&((*parv)->dir), reg);
+        int cmp_result = cmp((*parv)->item, reg);
+        if (cmp_result > 0) {
+            avl_remove(&((*parv)->esq), reg, cmp);
+        } else if (cmp_result < 0) {
+            avl_remove(&((*parv)->dir), reg, cmp);
         } else {
-            remove_lista(&(*parv)->lista, reg);
+            remove_lista(&(*parv)->lista, reg, cmp);
             if ((*parv)->lista == NULL) {
                 if ((*parv)->esq == NULL && (*parv)->dir == NULL) {
                     free(*parv);
@@ -160,7 +161,7 @@ void avl_remove(tnode **parv, titem reg) {
                 } else {
                     tnode **sucessor = percorre_esq(&(*parv)->dir);
                     (*parv)->item = (*sucessor)->item;
-                    avl_remove(&(*parv)->dir, (*sucessor)->item);
+                    avl_remove(&(*parv)->dir, (*sucessor)->item, cmp);
                 }
             }
         }
