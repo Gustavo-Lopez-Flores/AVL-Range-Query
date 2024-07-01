@@ -8,7 +8,7 @@
 void load_json_file(const char *filename, cJSON **json) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
-        perror("Unable to open file");
+        perror("Erro ao abrir");
         exit(EXIT_FAILURE);
     }
 
