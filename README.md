@@ -41,7 +41,7 @@ Desenvolva uma interface para permitir a realização de range queries e combina
 
    - Execute na raiz do projeto para compilar, depois execute `./saida`
 
-         gcc -I./cJSON -I./include src/avl.c src/compare.c src/main.c cJSON/cJSON.c -o saida
+         gcc -I./cJSON -I./include src/avl.c src/compare.c src/main.c src/hash.c  cJSON/cJSON.c -o saida
 
 ---
 
