@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "avl.h"
-#include "compare.h"
-#include "cJSON.h"
+#include "../include/avl.h"
+#include "../include/compare.h"
+#include "../cJSON/cJSON.h"
 
 void load_json_file(const char *filename, cJSON **json) {
     FILE *file = fopen(filename, "r");
@@ -33,11 +33,8 @@ void build_avl_from_json(tnode **root, cJSON *json, int (*cmp)(titem, titem)) {
         item.nome = cJSON_GetObjectItem(municipio, "nome")->valuestring;
         item.latitude = cJSON_GetObjectItem(municipio, "latitude")->valuedouble;
         item.longitude = cJSON_GetObjectItem(municipio, "longitude")->valuedouble;
-        item.capital = cJSON_GetObjectItem(municipio, "capital")->valueint;
         item.codigo_uf = cJSON_GetObjectItem(municipio, "codigo_uf")->valueint;
-        item.siafi_id = cJSON_GetObjectItem(municipio, "siafi_id")->valueint;
         item.ddd = cJSON_GetObjectItem(municipio, "ddd")->valueint;
-        item.fuso_horario = cJSON_GetObjectItem(municipio, "fuso_horario")->valuestring;
 
         avl_insere(root, item, cmp);
     }
