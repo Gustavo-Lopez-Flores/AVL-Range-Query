@@ -6,6 +6,15 @@
 #include "../include/hash.h"
 #include "../cJSON/cJSON.h"
 
+typedef struct {
+    int codigo_ibge;
+    char *nome;
+    double latitude;
+    double longitude;
+    int codigo_uf;
+    int ddd;
+} titem;
+
 char *get_key_codigo_ibge(void *registro) {
     titem *item = (titem *)registro;
     char *key = (char *)malloc(12);
@@ -84,39 +93,37 @@ int main(void) {
     cJSON *json;
     load_json_file("municipios.json", &json);
 
-    tnode *avl_nome = NULL;
     tnode *avl_latitude = NULL;
     tnode *avl_longitude = NULL;
-    tnode *avl_codigo_uf = NULL;
     tnode *avl_ddd = NULL;
 
-    build_avl_from_json(&avl_nome, json, compare_nome);
     build_avl_from_json(&avl_latitude, json, compare_latitude);
     build_avl_from_json(&avl_longitude, json, compare_longitude);
-    build_avl_from_json(&avl_codigo_uf, json, compare_codigo_uf);
     build_avl_from_json(&avl_ddd, json, compare_ddd);
 
     thash hash;
-    hash_constroi(&hash, 1000, get_key_codigo_ibge);
+    hash_constroi(&hash, 5570, get_key_codigo_ibge);
     build_hash_from_json(&hash, json);
 
-    int resultado_latitude[1000], tamanho_latitude = 0;
-    int resultado_longitude[1000], tamanho_longitude = 0;
-    int resultado_ddd[1000], tamanho_ddd = 0;
+    int resultado_latitude[5570], tamanho_latitude = 0;
+    int resultado_longitude[5570], tamanho_longitude = 0;
+    int resultado_ddd[5570], tamanho_ddd = 0;
 
     consulta_latitude_maior_que(avl_latitude, 50.0, resultado_latitude, &tamanho_latitude);
     consulta_longitude_intervalo(avl_longitude, 20.0, 30.0, resultado_longitude, &tamanho_longitude);
     consulta_ddd_igual(avl_ddd, 67, resultado_ddd, &tamanho_ddd);
 
-    int resultado_interseccao[1000], tamanho_interseccao = 0;
+    int resultado_interseccao[5570], tamanho_interseccao = 0;
     for (int i = 0; i < tamanho_latitude; i++) {
         for (int j = 0; j < tamanho_longitude; j++) {
             if (resultado_latitude[i] == resultado_longitude[j]) {
                 for (int k = 0; k < tamanho_ddd; k++) {
                     if (resultado_latitude[i] == resultado_ddd[k]) {
                         resultado_interseccao[tamanho_interseccao++] = resultado_latitude[i];
+                        break;
                     }
                 }
+                break;
             }
         }
     }
@@ -125,10 +132,8 @@ int main(void) {
     print_resultado(hash, resultado_interseccao, tamanho_interseccao);
 
     cJSON_Delete(json);
-    avl_destroi(avl_nome);
     avl_destroi(avl_latitude);
     avl_destroi(avl_longitude);
-    avl_destroi(avl_codigo_uf);
     avl_destroi(avl_ddd);
     hash_apaga(&hash);
 
